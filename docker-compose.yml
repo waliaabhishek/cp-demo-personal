@@ -15,8 +15,10 @@ services:
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_jaas.conf
                   -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
                   -DrequireClientAuthScheme=sasl
+                  -javaagent:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
     volumes:
       - ./scripts/security:/etc/kafka/secrets
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
 
   tools:
     image: cnfltraining/training-tools:5.4
@@ -57,6 +59,8 @@ services:
       - ./conf:/tmp/conf
       - ./scripts/helper:/tmp/helper
       - ./scripts/security:/etc/kafka/secrets
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
+
     command: "bash -c 'if [ ! -f /etc/kafka/secrets/kafka.kafka1.keystore.jks ]; then echo \"ERROR: Did not find SSL certificates in /etc/kafka/secrets/ (did you remember to run ./scripts/start.sh instead of docker-compose up -d?)\" && exit 1 ; else /etc/confluent/docker/run ; fi'"
     ports:
       - 8091:8091
@@ -138,6 +142,8 @@ services:
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
                   -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.kafka1.truststore.jks
                   -Djavax.net.ssl.trustStorePassword=confluent
+                  -javaagent:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
+
 
       # MDS
       KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: 2
@@ -189,6 +195,7 @@ services:
       - ./conf:/tmp/conf
       - ./scripts/helper:/tmp/helper
       - ./scripts/security:/etc/kafka/secrets
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
     command: "bash -c 'if [ ! -f /etc/kafka/secrets/kafka.kafka2.keystore.jks ]; then echo \"ERROR: Did not find SSL certificates in /etc/kafka/secrets/ (did you remember to run ./scripts/start.sh instead of docker-compose up -d?)\" && exit 1 ; else /etc/confluent/docker/run ; fi'"
     ports:
       - 8092:8092
@@ -270,6 +277,7 @@ services:
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
                   -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.kafka2.truststore.jks
                   -Djavax.net.ssl.trustStorePassword=confluent
+                  -javaagent:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
 
       # MDS
       KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: 2
@@ -325,6 +333,7 @@ services:
       - mi3:/usr/share/java/kafka-connect-replicator/
       - ./scripts/security:/etc/kafka/secrets
       - ./conf:/tmp/conf
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
     command: "bash -c 'sleep 10 && \
               cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
               /etc/confluent/docker/run'"
@@ -491,6 +500,8 @@ services:
                   -Djavax.net.ssl.trustStorePassword=confluent
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.connect.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
+                  -javaagent:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
+
       CONNECT_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.0
@@ -519,6 +530,19 @@ services:
     environment:
       xpack.security.enabled: 'false'
 
+  jmx-data-poller:
+    image: python:latest
+    container_name: jmx-data-poller
+    cpus: 0.2
+    restart: always
+    depends_on:
+      - kibana
+    volumes:
+      - ./scripts/app/Parse_JMX.py:/tmp/JMXParser/Parse_JMX.py:rw
+      - ./scripts/app/requirements.txt:/tmp/JMXParser/requirements.txt:rw
+      - ./scripts/dashboard/jmx_dashboard.json:/tmp/JMXParser/jmx_dashboard.json:rw
+    command: "bash -c 'pip install -r /tmp/JMXParser/requirements.txt && cd /tmp/JMXParser && python /tmp/JMXParser/Parse_JMX.py'"
+
   control-center:
     image: confluentinc/cp-enterprise-control-center:5.4.1
     hostname: control-center
@@ -532,6 +556,7 @@ services:
     volumes:
       - ./conf:/tmp/conf
       - ./scripts/security:/etc/kafka/secrets
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
     ports:
       - 9021:9021
       - 9022:9022
@@ -616,6 +641,7 @@ services:
     volumes:
       - ./scripts/security:/etc/kafka/secrets
       - ./conf:/tmp/conf
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
     ports:
       - 8085:8085
     environment:
@@ -728,6 +754,7 @@ services:
       - ./conf:/tmp/conf
       - ./scripts/helper:/tmp/helper
       - ./scripts/security:/etc/kafka/secrets
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
     ports:
       - 8088:8088
     environment:

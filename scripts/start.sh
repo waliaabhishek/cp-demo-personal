@@ -125,6 +125,11 @@ ${DIR}/connectors/submit_replicator_config.sh
 echo -e "\n\nConfluent Control Center modifications:"
 ${DIR}/helper/control-center-modifications.sh
 
+echo
+echo "Start the Kafka JMX Metrics Collection application"
+docker-compose up -d jmx-data-poller
+echo "..."
+
 
 echo -e "\n\n\n*****************************************************************************************************************"
 echo -e "DONE! Connect to Confluent Control Center at http://localhost:9021 (login as superUser/superUser for full access)"
