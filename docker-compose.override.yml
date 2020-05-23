@@ -77,7 +77,7 @@ services:
     depends_on:
       - kibana
     volumes:
-      - ./scripts/app/Parse_JMX1.py:/tmp/JMXParser/Parse_JMX.py:rw
+      - ./scripts/app/Parse_JMX.py:/tmp/JMXParser/Parse_JMX.py:rw
       - ./scripts/app/requirements.txt:/tmp/JMXParser/requirements.txt:rw
       - ./scripts/dashboard/jmx_dashboard.json:/tmp/JMXParser/jmx_dashboard.json:rw
     command: "bash -c 'pip install -r /tmp/JMXParser/requirements.txt && cd /tmp/JMXParser && python /tmp/JMXParser/Parse_JMX.py'"
