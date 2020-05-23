@@ -96,30 +96,30 @@ services:
       SPLUNK_PASSWORD: confluent
       SPLUNK_HEC_TOKEN: abcd1234
 
-  # prometheus:
-  #   image: prom/prometheus
-  #   restart: always
-  #   container_name: prometheus
-  #   depends_on:
-  #     - zookeeper
-  #   ports:
-  #     - 7070:9090
-  #   volumes:
-  #     - ./env_files/jmxexporter_configs/configs/prometheus.yml:/etc/prometheus/prometheus.yml
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    container_name: prometheus
+    depends_on:
+      - zookeeper
+    ports:
+      - 7070:9090
+    volumes:
+      - ./env_files/jmxexporter_configs/configs/prometheus.yml:/etc/prometheus/prometheus.yml
 
-  # grafana:
-  #   image: grafana/grafana
-  #   restart: always
-  #   container_name: grafana
-  #   depends_on: 
-  #     - prometheus
-  #   ports:
-  #     - 7071:3000
-  #   volumes:
-  #     - ./env_files/jmxexporter_configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasource.yml
-  #     - ./env_files/jmxexporter_configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
-  #   env_file:
-  #     - ./env_files/jmxexporter_configs/grafana/config.monitoring
+  grafana:
+    image: grafana/grafana
+    restart: always
+    container_name: grafana
+    depends_on: 
+      - prometheus
+    ports:
+      - 7071:3000
+    volumes:
+      - ./env_files/jmxexporter_configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./env_files/jmxexporter_configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    env_file:
+      - ./env_files/jmxexporter_configs/grafana/config.monitoring
 
   # control-center:
   #   environment:
