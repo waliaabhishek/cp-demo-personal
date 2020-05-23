@@ -1,0 +1,164 @@
+lowercaseOutputName: true
+
+rules:
+# Special cases and very specific rules
+- pattern : kafka.server<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+  name: kafka_brokers_server_$1_$2
+  type: GAUGE
+  labels:
+    clientId: "$3"
+    topic: "$4"
+    partition: "$5"
+    serverType: KafkaBrokers
+- pattern : kafka.server<type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)><>Value
+  name: kafka_brokers_server_$1_$2
+  type: GAUGE
+  labels:
+    clientId: "$3"
+    broker: "$4:$5"
+    serverType: KafkaBrokers
+# Kafka Producer/Consumer Metrics which are missed from the other rules
+- pattern : kafka.(\w+)<type=(.+), client-id=(.+), (.+)=(.+), (.+)=(.+)><>Value
+  name: kafka_brokers_$1_$2
+  type: GAUGE
+  labels:
+    clientId: "$3"
+    "$4": "$5"
+    "$6": "$7"
+    serverType: KafkaBrokers
+- pattern : kafka.(\w+)<type=(.+), client-id=(.+), (.+)=(.+)><>Value
+  name: kafka_brokers_$1_$2
+  type: GAUGE
+  labels:
+    clientId: "$3"
+    "$4": "$5"
+    serverType: KafkaBrokers
+- pattern : kafka.(\w+)<type=(.+), client-id=(.+)><>Value
+  name: kafka_brokers_$1_$2
+  type: GAUGE
+  labels:
+    clientId: "$3"
+    serverType: KafkaBrokers
+
+- pattern : kafka.coordinator.(\w+)<type=(.+), name=(.+)><>Value
+  name: kafka_brokers_coordinator_$1_$2_$3
+  type: GAUGE
+  labels:
+    serverType: KafkaBrokers
+# Generic per-second counters with 0-2 key/value pairs
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+), (.+)=(.+)><>Count
+  name: kafka_brokers_$1_$2_$3_total
+  type: COUNTER
+  labels:
+    "$4": "$5"
+    "$6": "$7"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*, (.+)=(.+)><>Count
+  name: kafka_brokers_$1_$2_$3_total
+  type: COUNTER
+  labels:
+    "$4": "$5"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+)PerSec\w*><>Count
+  name: kafka_brokers_$1_$2_$3_total
+  type: COUNTER
+  labels:
+    serverType: KafkaBrokers
+
+- pattern: kafka.server<type=(.+), client-id=(.+)><>([a-z-]+)
+  name: kafka_brokers_server_quota_$3
+  type: GAUGE
+  labels:
+    resource: "$1"
+    clientId: "$2"
+    serverType: KafkaBrokers
+
+- pattern: kafka.server<type=(.+), user=(.+), client-id=(.+)><>([a-z-]+)
+  name: kafka_brokers_server_quota_$4
+  type: GAUGE
+  labels:
+    resource: "$1"
+    user: "$2"
+    clientId: "$3"
+    serverType: KafkaBrokers
+
+# Generic gauges with 0-2 key/value pairs
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Value
+  name: kafka_brokers_$1_$2_$3
+  type: GAUGE
+  labels:
+    "$4": "$5"
+    "$6": "$7"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Value
+  name: kafka_brokers_$1_$2_$3
+  type: GAUGE
+  labels:
+    "$4": "$5"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>Value
+  name: kafka_brokers_$1_$2_$3
+  type: GAUGE
+  labels:
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), (.*)=(.+), (.*)=(.+)><>Value
+  name: kafka_brokers_$1_$2
+  type: GAUGE
+  labels:
+    "$3": "$4"
+    "$5": "$6"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), (.*)=(.+)><>Value
+  name: kafka_brokers_$1_$2
+  type: GAUGE
+  labels:
+    "$3": "$4"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+)><>Value
+  name: kafka_brokers_$1_$2
+  type: GAUGE
+  labels:
+    serverType: KafkaBrokers
+
+# Emulate Prometheus 'Summary' metrics for the exported 'Histogram's.
+#
+# Note that these are missing the '_sum' metric!
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+), (.+)=(.+)><>Count
+  name: kafka_brokers_$1_$2_$3_count
+  type: COUNTER
+  labels:
+    "$4": "$5"
+    "$6": "$7"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*), (.+)=(.+)><>(\d+)thPercentile
+  name: kafka_brokers_$1_$2_$3
+  type: GAUGE
+  labels:
+    "$4": "$5"
+    "$6": "$7"
+    quantile: "0.$8"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.+)><>Count
+  name: kafka_brokers_$1_$2_$3_count
+  type: COUNTER
+  labels:
+    "$4": "$5"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+), (.+)=(.*)><>(\d+)thPercentile
+  name: kafka_brokers_$1_$2_$3
+  type: GAUGE
+  labels:
+    "$4": "$5"
+    quantile: "0.$6"
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>Count
+  name: kafka_brokers_$1_$2_$3_count
+  type: COUNTER
+  labels:
+    serverType: KafkaBrokers
+- pattern: kafka.(\w+)<type=(.+), name=(.+)><>(\d+)thPercentile
+  name: kafka_brokers_$1_$2_$3
+  type: GAUGE
+  labels:
+    quantile: "0.$4"
+    serverType: KafkaBrokers

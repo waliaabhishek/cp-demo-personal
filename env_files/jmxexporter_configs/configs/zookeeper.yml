@@ -1,0 +1,40 @@
+lowercaseOutputName: true
+
+rules:
+  - pattern: "org.apache.ZooKeeperService<name0=(\\w+)_(\\w+)(\\d+)><>(\\w+)"
+    name: "zookeeper_$4"
+    type: GAUGE
+    labels:
+      serverType: Zookeeper
+  - pattern: "org.apache.ZooKeeperService<name0=(\\w+)_(\\w+)(\\d+), name1=replica.(\\d+)><>(\\w+)"
+    name: "zookeeper_$5"
+    type: GAUGE
+    labels:
+      replicaId: "$4"
+      serverType: Zookeeper
+  - pattern: "org.apache.ZooKeeperService<name0=(\\w+)_(\\w+)(\\d+), name1=replica.(\\d+), name2=(\\w+)><>(Packets\\w+)"
+    name: "zookeeper_$5_total"
+    type: COUNTER
+    labels:
+      replicaId: "$4"
+      memberType: "$5"
+      serverType: Zookeeper
+  - pattern: "org.apache.ZooKeeperService<name0=(\\w+)_(\\w+)(\\d+), name1=replica.(\\d+), name2=(\\w+)><>(\\w+)"
+    name: "zookeeper_$6"
+    type: GAUGE
+    labels:
+      replicaId: "$4"
+      memberType: "$5"
+      serverType: Zookeeper
+  - pattern: "org.apache.ZooKeeperService<name0=(\\w+)_(\\w+)(\\d+), name1=replica.(\\d+), name2=(\\w+), name3=(\\w+)><>(\\w+)"
+    name: "zookeeper_$6_$7"
+    type: GAUGE
+    labels:
+      replicaId: "$4"
+      memberType: "$5"
+      serverType: Zookeeper
+  - pattern: "org.apache.ZooKeeperService<name0=(\\w+)_(\\w+)(\\d+), name1=InMemoryDataTree><>(\\w+)"
+    type: GAUGE
+    name: "zookeeper_nmemorydatatree_$4"
+    labels:
+      serverType: Zookeeper

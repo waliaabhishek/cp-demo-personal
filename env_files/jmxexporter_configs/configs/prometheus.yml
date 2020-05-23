@@ -1,0 +1,21 @@
+global:
+ scrape_interval: 30s
+ scrape_timeout: 20s
+ evaluation_interval: 30s
+scrape_configs:
+ - job_name: 'Zookeeper'
+   metrics_path: /metrics
+   static_configs:
+    - targets:
+      - zookeeper:49800
+ - job_name: 'KafkaBrokers'
+   metrics_path: /metrics
+   static_configs:
+    - targets:
+      - kafka1:49800
+      - kafka2:49800
+ - job_name: 'KafkaConnect'
+   metrics_path: /metrics
+   static_configs:
+    - targets:
+      - connect:49800
