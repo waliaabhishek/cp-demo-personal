@@ -22,11 +22,12 @@ kibanaURL = "http://kibana:5601"
 
 # The list of endpoints to be farmed. The Structure is a Dictionary with the Server/Component type as the Key and
 # Value is a list of JMX URL's that need to be farmed for those servers.
-urllist = {"ZooKeeper": ["http://zookeeper:49900/jolokia/read/org.apache.ZooKeeperService:*"],
+urllist = {"KafkaConnect": ["http://connect:49900/jolokia//read/kafka.*:*"],
+           "ZooKeeper": ["http://zookeeper:49900/jolokia/read/org.apache.ZooKeeperService:*"],
            "KafkaBroker": ["http://kafka1:49900/jolokia/read/kafka.*:*",
-                           "http://kafka2:49900/jolokia/read/kafka.*:*"],
-           "KafkaConnect": ["http://connect:49900/jolokia//read/kafka.*:*"]
+                           "http://kafka2:49900/jolokia/read/kafka.*:*"]
            }
+
 # TODO : In progress for implementation to add Alias name or alternate names instead of Hostnames for beautifying the dashboard
 # aliasServerNames = [{"ZooKeeper1" : "http://localhost:49900"},
 #                     {"KafkaBroker1" : "http://localhost:49910"},
