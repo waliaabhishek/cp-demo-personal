@@ -3,6 +3,7 @@
 
 .DS_Store
 *.idea
+*.vscode
 scripts/security/*.crt
 scripts/security/*.csr
 scripts/security/*_creds
@@ -14,5 +15,5 @@ scripts/security/*.pem
 scripts/security/*.der
 scripts/security/*.p12
 conf/
-
+__pycache__
 ui/expanded
