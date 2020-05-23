@@ -1,0 +1,138 @@
+version: "2.3"
+services:
+
+  zookeeper:
+    ports:
+      - 49801:49800
+      - 49901:49900
+    environment:
+      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=49800:/usr/share/jmx_exporter/zookeeper.yml
+                  -javaagent:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
+    volumes:
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
+      - ./env_files/jmx_prometheus_javaagent-0.12.0.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar:rw
+      - ./env_files/jmxexporter_configs/configs/zookeeper.yml:/usr/share/jmx_exporter/zookeeper.yml
+
+  kafka1:
+    volumes:
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
+      - ./env_files/jmxexporter_configs/configs/kafka.yml:/usr/share/jmx_exporter/kafka.yml
+      - ./env_files/jmx_prometheus_javaagent-0.12.0.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar
+    ports:
+      - 12093:12093
+      - 49811:49800
+      - 49911:49900
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9091,TOKEN://kafka1:10091,SSL://kafka1:11091,CLEAR://kafka1:12091,EXTERNAL://localhost:12093
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
+                  -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.kafka1.truststore.jks
+                  -Djavax.net.ssl.trustStorePassword=confluent
+                  -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=49800:/usr/share/jmx_exporter/kafka.yml
+                  -javaagent:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
+
+  kafka2:
+    volumes:
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
+      - ./env_files/jmxexporter_configs/configs/kafka.yml:/usr/share/jmx_exporter/kafka.yml
+      - ./env_files/jmx_prometheus_javaagent-0.12.0.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar
+    ports:
+      - 12094:12094
+      - 49812:49800
+      - 49912:49900
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9092,TOKEN://kafka2:10092,SSL://kafka2:11092,CLEAR://kafka2:12092,EXTERNAL://localhost:12094 
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
+                  -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.kafka1.truststore.jks
+                  -Djavax.net.ssl.trustStorePassword=confluent
+                  -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=49800:/usr/share/jmx_exporter/kafka.yml
+                  -javaagent:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
+
+  connect:
+    volumes:
+      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
+      - ./env_files/jmx_prometheus_javaagent-0.12.0.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar
+      - ./env_files/jmxexporter_configs/configs/connect.yml:/usr/share/jmx_exporter/connect.yml
+    ports:
+      - 49921:49900
+      - 49821:49800
+    environment:
+      # KAFKA_OPTS required for ReplicatorMonitoringExtension
+      KAFKA_OPTS: -javaagent:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
+                  -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=49800:/usr/share/jmx_exporter/connect.yml
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/connect-plugins,/usr/share/confluent-hub-components"
+    command: "bash -c 'sleep 10 && \
+              confluent-hub install splunk/kafka-connect-splunk:1.2.0 --no-prompt && \
+              cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
+              /etc/confluent/docker/run'"
+
+  jmx-data-poller:
+    image: python:latest
+    container_name: jmx-data-poller
+    cpus: 0.2
+    restart: "no"
+    depends_on:
+      - kibana
+    volumes:
+      - ./scripts/app/Parse_JMX1.py:/tmp/JMXParser/Parse_JMX.py:rw
+      - ./scripts/app/requirements.txt:/tmp/JMXParser/requirements.txt:rw
+      - ./scripts/dashboard/jmx_dashboard.json:/tmp/JMXParser/jmx_dashboard.json:rw
+    command: "bash -c 'pip install -r /tmp/JMXParser/requirements.txt && cd /tmp/JMXParser && python /tmp/JMXParser/Parse_JMX.py'"
+
+  splunk:
+    image: splunk/splunk
+    restart: always
+    container_name: splunk
+    depends_on: 
+      - elasticsearch
+    ports:
+      - 7080:8000  #SplunkWeb UI
+      - 7081:8088  #HTTP Event Collector (HEC)
+    environment:
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_PASSWORD: confluent
+      SPLUNK_HEC_TOKEN: abcd1234
+
+  # prometheus:
+  #   image: prom/prometheus
+  #   restart: always
+  #   container_name: prometheus
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - 7070:9090
+  #   volumes:
+  #     - ./env_files/jmxexporter_configs/configs/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  # grafana:
+  #   image: grafana/grafana
+  #   restart: always
+  #   container_name: grafana
+  #   depends_on: 
+  #     - prometheus
+  #   ports:
+  #     - 7071:3000
+  #   volumes:
+  #     - ./env_files/jmxexporter_configs/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasource.yml
+  #     - ./env_files/jmxexporter_configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
+  #   env_file:
+  #     - ./env_files/jmxexporter_configs/grafana/config.monitoring
+
+  # control-center:
+  #   environment:
+  #     CONTROL_CENTER_CONNECT_CONNECT1_CLUSTER: https://connect:8083
+
+  # control-center:
+  #   volumes:
+  #     - ./env_files/jolokia-jvm-1.6.2-agent.jar:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
+
+  # schemaregistry:
+  #   volumes:
+  #     - ./env_files/jolokia-jvm-1.6.2-agent.jar:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
+
+  # ksql-server:
+  #   volumes:
+  #     - ./env_files/jolokia-jvm-1.6.2-agent.jar:/usr/share/jolokia/jolokia-jvm-1.6.2-agent.jar:rw

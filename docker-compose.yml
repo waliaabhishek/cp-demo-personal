@@ -68,11 +68,12 @@ services:
       - 10091:10091
       - 11091:11091
       - 12091:12091
+      - 12093:12093
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9091,TOKEN://kafka1:10091,SSL://kafka1:11091,CLEAR://kafka1:12091
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9091,TOKEN://kafka1:10091,SSL://kafka1:11091,CLEAR://kafka1:12091,EXTERNAL://localhost:12093
       
       KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
@@ -142,7 +143,6 @@ services:
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
                   -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.kafka1.truststore.jks
                   -Djavax.net.ssl.trustStorePassword=confluent
-                  -javaagent:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
 
 
       # MDS
@@ -181,8 +181,6 @@ services:
       KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
       KAFKA_LDAP_GROUP_OBJECT_CLASS: group
 
-
-
   kafka2:
     image: confluentinc/cp-server:5.4.1
     hostname: kafka2
@@ -203,11 +201,12 @@ services:
       - 10092:10092
       - 11092:11092
       - 12092:12092
+      - 12094:12094
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_SSL,SSL:SSL,CLEAR:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9092,TOKEN://kafka2:10092,SSL://kafka2:11092,CLEAR://kafka2:12092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9092,TOKEN://kafka2:10092,SSL://kafka2:11092,CLEAR://kafka2:12092,EXTERNAL://localhost:12094 
       
       KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
@@ -239,7 +238,7 @@ services:
       KAFKA_CONFLUENT_SECURITY_EVENT_LOGGER_EXPORTER_KAFKA_TOPIC_REPLICAS: 2
 
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
 
       # Confluent Metrics Reporter
@@ -315,8 +314,6 @@ services:
       KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
       KAFKA_LDAP_GROUP_OBJECT_CLASS: group
 
-
-
   connect:
     image: confluentinc/cp-server-connect:5.4.1
     container_name: connect
@@ -333,7 +330,6 @@ services:
       - mi3:/usr/share/java/kafka-connect-replicator/
       - ./scripts/security:/etc/kafka/secrets
       - ./conf:/tmp/conf
-      - ./env_files/jolokia-jvm-1.6.2-agent.jar:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar:rw
     command: "bash -c 'sleep 10 && \
               cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
               /etc/confluent/docker/run'"
@@ -503,6 +499,7 @@ services:
                   -javaagent:/tmp/jolokia/jolokia-jvm-1.6.2-agent.jar=port=49900,host=*
 
       CONNECT_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
+  
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.0
     container_name: elasticsearch
