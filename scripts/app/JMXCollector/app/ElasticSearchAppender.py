@@ -17,20 +17,24 @@ es_index_name = ""
 # and dashboard setup.
 kibana_url = ""
 kibana_dashboard_file_location = ""
+es_bulk_url_timeout_secs = 30
 
 
 def setup_elastic_connection(elasticsearch_endpoint="http://localhost:9200",
                              elasticsearch_index_name="kafka-jmx-logs",
                              kibana_endpoint="http://localhost:5601",
+                             es_bulk_url_timeout=30,
                              kibana_dashboard_filename="scripts/dashboard/jmx_dashboard.json"
                              ):
     global es_url
     global es_index_name
     global kibana_url
     global kibana_dashboard_file_location
+    global es_bulk_url_timeout_secs
     es_url = elasticsearch_endpoint
     es_index_name = elasticsearch_index_name
     kibana_url = kibana_endpoint
+    es_bulk_url_timeout_secs = es_bulk_url_timeout
     kibana_dashboard_file_location = kibana_dashboard_filename
     create_elastic_index_template()
 
@@ -45,18 +49,20 @@ def create_elastic_index_template():
         'Content-Type': 'application/json',
     }
     # setup the body for inserting the templates
-    data = '{"template": "' + es_index_name + '-*","mappings": {"default": {"properties": {"createdDateTime": {"type": "date"}}}}}'
+    data = '{"template": "' + es_index_name + \
+        '-*","mappings": {"default": {"properties": {"createdDateTime": {"type": "date"}}}}}'
     # Insert the template into Elastic for datatime formatting
     requests.put(es_url + '/_template/' + es_index_name + '_template', headers=request_headers,
-                            data=data)
+                 data=data)
     # Setup the headers for inserting index
     request_headers['kbn-version'] = '5.5.2'
 
     # Create the index pattern for Kibana
-    index_creation = '{"title": "' + es_index_name + '-*","notExpandable":true, "timeFieldName": "createdDateTime"}'
+    index_creation = '{"title": "' + es_index_name + \
+        '-*","notExpandable":true, "timeFieldName": "createdDateTime"}'
     #  insert the index pattern for Kibana
     requests.put(kibana_url + '/es_admin/.kibana/index-pattern/' + es_index_name + '-*/_create',
-                            headers=request_headers, data=index_creation)
+                 headers=request_headers, data=index_creation)
     # Parse all the objects in the Dashboard & Visualization file as Kibana 5.5.2 does not have a bulk API for insert.
     # Setup the headers for inserting objects into Kibana
     request_headers['kbn-xsrf'] = 'true'
@@ -90,12 +96,14 @@ def call_elastic_bulk(data_dict):
     es_client = Elasticsearch([es_url],
                               retry_on_timeout=True,
                               max_retries=10,
-                              timoeut=30)
+                              timeout=es_bulk_url_timeout_secs)
     # body = []
     in_memory_file_path = io.StringIO("")
-    in_memory_file_path = internal_write_data_to_file(in_memory_file_path, data_dict)
+    in_memory_file_path = internal_write_data_to_file(
+        in_memory_file_path, data_dict)
     # body = file.read().splitlines()
     curr_index_name = es_index_name + "-" + time.strftime("%Y-%m-%d")
-    es_client.bulk(body=in_memory_file_path.getvalue(), index=curr_index_name, params={"timeout": "30s", "request_timeout": 30})
+    es_client.bulk(body=in_memory_file_path.getvalue(), index=curr_index_name, params={
+                   "timeout": str(es_bulk_url_timeout_secs) + "s", "request_timeout": es_bulk_url_timeout_secs})
     in_memory_file_path.close()
     # return response
