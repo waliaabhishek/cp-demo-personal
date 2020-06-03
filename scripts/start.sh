@@ -125,7 +125,13 @@ ${DIR}/connectors/submit_replicator_config.sh
 echo -e "\n\nConfluent Control Center modifications:"
 ${DIR}/helper/control-center-modifications.sh
 
-${DIR}/start_addon.sh
+# TODO : Work on determining if the docker Override file is active or not and only then execute the following docker-compose commands.
+echo
+echo "Start the Kafka JMX Metrics Collection application"
+# docker-compose up -d jmx-data-poller  
+# docker-compose up -d prometheus grafana 
+# docker-compose up -d splunk 
+echo "..."
 
 echo -e "\n\n\n*****************************************************************************************************************"
 echo -e "DONE! Connect to Confluent Control Center at http://localhost:9021 (login as superUser/superUser for full access)"
