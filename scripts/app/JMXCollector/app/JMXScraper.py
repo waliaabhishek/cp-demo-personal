@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+from urllib.parse import urlunparse
 import concurrent.futures
 import itertools
 import json
@@ -31,11 +32,12 @@ def get_unique_server_list():
     splitter_value = "____"
     # Iterate over data and sort out the details
     for server_type, server_list in url_list.items():
-        for url in server_list:
-            url_details = urlparse(url)
-            host_names.append(server_type + splitter_value + str(
-                url_details.scheme + "://" + url_details.hostname + ":"
-                + str(url_details.port)))
+        if server_list is not None:
+            for url in server_list:
+                url_details = urlparse(url)
+                host_names.append(server_type + splitter_value + str(
+                    url_details.scheme + "://" + url_details.hostname + ":"
+                    + str(url_details.port)))
     # Dedupe in a single line ;) -- not so performant , but simpler
     host_names = list(set(host_names))
     # this statement converts the de-duped list into a dict for
@@ -62,7 +64,8 @@ def add_default_fetch_list_to_urlist():
                 value.append(str(filtered_host_URL + default_JMX_fetch_item))
     # De-dupe URL list for all server types
     for i, j in url_list.items():
-        url_list[i] = list(set(j))
+        if j is not None:
+            url_list[i] = list(set(j))
 
 
 def setup_everything(input_url_list, input_default_JMX_fetch=default_JMX_fetch, poll_wait=60,
@@ -119,11 +122,12 @@ def internal_prepare_jmx_data_for_url(url, execution_timestamp):
     url_details = urlparse(url)
     server_id = internal_get_server_type(url)
     server_host_name = str(url_details.hostname + ":" + str(url_details.port))
-    contents = json.loads(json.dumps(requests.get(
-        url, timeout=CALL_TIMEOUT_IN_SECS).json()))['value']
+    contents = json.loads(json.dumps(requests.get(url,
+                                                  timeout=CALL_TIMEOUT_IN_SECS).json()))['value']
     # print("Data for URL: " + url + " is in format " + str(type(contents)) + ". Data length is " + str(len(contents)) )
-    output_JSON_data = internal_get_structured_json_from_response(
-        contents, server_host_name, server_ID=server_id)
+    output_JSON_data = internal_get_structured_json_from_response(contents,
+                                                                  server_host_name,
+                                                                  server_ID=server_id)
     return {"target_url": url,
             "execution_timestamp": execution_timestamp,
             "result": output_JSON_data}
