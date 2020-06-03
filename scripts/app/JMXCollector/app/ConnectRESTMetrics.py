@@ -5,7 +5,7 @@ import itertools
 from requests.auth import HTTPBasicAuth
 from urllib3.exceptions import InsecureRequestWarning
 from urllib.parse import urlparse
-
+from url_normalize import url_normalize
 
 AUTH_ENABLED = False
 AUTH_TYPE = "basic"
@@ -110,7 +110,8 @@ def internal_invoke_call(input_uri, **kwargs):
     else:
         session.auth = None
     try:
-        contents = session.get(CONNECT_REST_ENDPOINT + input_uri)
+        contents = session.get(url_normalize(
+            CONNECT_REST_ENDPOINT + input_uri))
         if contents.ok:
             return contents.json()
     except Exception:
@@ -174,17 +175,16 @@ def get_connect_rest_metrics(**kwargs):
     loop = asyncio.get_event_loop()
     # Get all deployed connectors
     connectors_list = loop.run_until_complete(
-        internal_invoke_urls([CORE_ENDPOINTS[0]], kwargs))
+        internal_invoke_urls([CORE_ENDPOINTS[0]], **kwargs))
     # Render Connetor REST URI
     connectors_uri_list = [CORE_ENDPOINTS[1].replace(
         "{name}", k) for k in itertools.chain.from_iterable(connectors_list)]
     # Check Connector Status
     connectors_status_result = loop.run_until_complete(
-        internal_invoke_urls(connectors_uri_list, kwargs))
+        internal_invoke_urls(connectors_uri_list, **kwargs))
     # Setup a metrics object with all the attributes
     jmx_data = internal_generate_jmx_metrics_object(internal_generate_metrics_object(
         connector_status_dict=connectors_status_result))
-    loop.close()
     return jmx_data
 
 
