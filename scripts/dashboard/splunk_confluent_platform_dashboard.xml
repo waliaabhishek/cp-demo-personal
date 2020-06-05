@@ -1,0 +1,85 @@
+<dashboard>
+  <label>Confluent Platform Overall Health Dashboard Copy</label>
+  <row>
+    <panel>
+      <chart>
+        <title>CPU usage per server type</title>
+        <search>
+          <query>source="http:kafka_sink" SystemCpuLoad="*" |  timechart avg(SystemCpuLoad) by injectedServerType</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">collapsed</option>
+        <option name="charting.chart">radialGauge</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">291</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.splitBy">injectedServerType</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Memory Usage</title>
+      <chart>
+        <title>Heap Space Usage</title>
+        <search>
+          <query>source="http:kafka_sink" "HeapMemoryUsage.used"="*" 
+| bin _time span=1min
+| stats avg("HeapMemoryUsage.used") as heapUsed by _time injectedServerType injectedHostName
+| eval heapUsed=heapUsed/1024
+| eval {injectedHostName} = heapUsed
+| fields - injectedHostName heapUsed</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">collapsed</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">286</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">0</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <search>
+          <query>source="http:kafka_sink" "NonHeapMemoryUsage.used"="*" 
+| bin _time span=1min
+| stats avg("NonHeapMemoryUsage.used") as nonHeapUsed by _time injectedServerType injectedHostName
+| eval nonHeapUsed=nonHeapUsed/1024
+| eval {injectedHostName} = nonHeapUsed
+| fields - injectedHostName nonHeapUsed</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">collapsed</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">281</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.splitBy">injectedServerType</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>
