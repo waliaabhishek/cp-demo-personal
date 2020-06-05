@@ -41,7 +41,7 @@ def produce_messages_to_kafka(data_list: list, current_timestamp,
     for index, item in enumerate(data_list):
         try:
             producer_object.produce(topic=topic_name,
-                                    value=json.dumps(item),
+                                    value=item,
                                     on_delivery=delivery_report,
                                     timestamp=current_timestamp)
             if (index % 500 == 0):
