@@ -1,0 +1,5 @@
+confluent_kafka==1.4.1
+requests==2.23.0
+urllib3==1.25.8
+elasticsearch==7.0.4
+url_normalize==1.4.2
