@@ -69,17 +69,14 @@ services:
               cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
               /etc/confluent/docker/run'"
 
-  jmx-data-poller:
-    image: python:latest
-    container_name: jmx-data-poller
+  kafkajmxexporter:
+    image: abhiwalia/kafkajmxexporter:latest
+    container_name: kafkajmxexporter
     cpus: 0.2
-    restart: "no"
+    restart: "always"
     depends_on:
       - kibana
-    volumes:
-      - ./scripts/app/JMXCollector/app/:/usr/src/JMXCollector/app/:rw
-      - ./scripts/dashboard/jmx_dashboard.json:/usr/src/JMXCollector/app/scripts/dashboard/jmx_dashboard.json:rw
-    command: "bash -c 'pip install -r /usr/src/JMXCollector/app/requirements.txt && cd /usr/src/JMXCollector/app && python /usr/src/JMXCollector/app/main.py --jmx-zk-server http://zookeeper:49900/   --jmx-kafka-server   http://kafka1:49900/   --jmx-kafka-server   http://kafka2:49900/   --jmx-connect-server   http://connect:49900/   --enable-connect-rest-source   --connect-rest-endpoint   https://connect:8083/   --enable-connect-rest-auth   --connect-rest-auth-user   superUser   --connect-rest-auth-pass   superUser   --enable-elastic-sink   --es-url   http://elasticsearch:9200/   --kibana-url   http://kibana:5601/   --es-bulk-url-timeout   60   --enable-kafka-sink    --kafka-topic-name   jmx_data_ingestion_pipeline   --kafka-conn-props   bootstrap.servers=kafka1:12091   --kafka-conn-props   client.id=JMX_Data_Producer   --kafka-conn-props   compression.type=snappy   --kafka-conn-props   retries=10   --kafka-conn-props   linger.ms=50'"
+    command: " --jmx-zk-server http://zookeeper:49900/   --jmx-kafka-server   http://kafka1:49900/   --jmx-kafka-server   http://kafka2:49900/   --jmx-connect-server   http://connect:49900/   --enable-connect-rest-source   --connect-rest-endpoint   https://connect:8083/   --enable-connect-rest-auth   --connect-rest-auth-user   superUser   --connect-rest-auth-pass   superUser   --enable-elastic-sink   --es-url   http://elasticsearch:9200/   --kibana-url   http://kibana:5601/   --es-bulk-url-timeout   60   --enable-kafka-sink    --kafka-topic-name   jmx_data_ingestion_pipeline   --kafka-conn-props   bootstrap.servers=kafka1:12091   --kafka-conn-props   client.id=JMX_Data_Producer   --kafka-conn-props   compression.type=snappy   --kafka-conn-props   retries=10   --kafka-conn-props   linger.ms=50"
 
   splunk:
     image: splunk/splunk:latest

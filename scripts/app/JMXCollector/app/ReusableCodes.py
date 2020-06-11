@@ -3,6 +3,7 @@ from functools import reduce
 
 
 def current_milli_time():
+    import time
     return int(round(time.time() * 1000))
 
 
