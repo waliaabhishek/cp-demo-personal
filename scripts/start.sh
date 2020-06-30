@@ -70,7 +70,7 @@ if [[ $(docker-compose logs connect) =~ "server returned information about unkno
 fi
 
 # Verify Kafka Connect Worker has started
-MAX_WAIT=150
+MAX_WAIT=240
 echo "Waiting up to $MAX_WAIT seconds for Connect to start"
 retry $MAX_WAIT host_check_connect_up || exit 1
 
@@ -128,9 +128,9 @@ ${DIR}/helper/control-center-modifications.sh
 # TODO : Work on determining if the docker Override file is active or not and only then execute the following docker-compose commands.
 echo
 echo "Start the Kafka JMX Metrics Collection application"
-docker-compose up -d jmx-data-poller  
-docker-compose up -d prometheus grafana 
-docker-compose up -d splunk 
+docker-compose up -d kafkametricsexporter 
+# docker-compose up -d prometheus grafana 
+# docker-compose up -d splunk 
 echo "..."
 
 echo -e "\n\n\n*****************************************************************************************************************"
